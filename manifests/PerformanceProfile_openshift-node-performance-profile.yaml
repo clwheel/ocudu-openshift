@@ -1,0 +1,15 @@
+apiVersion: performance.openshift.io/v2
+kind: PerformanceProfile
+metadata:
+  name: openshift-node-performance-profile
+spec:
+  cpu:
+    isolated: 2-27,30-55
+    reserved: 0-1,28-29
+  hugepages:
+    defaultHugepagesSize: 1G
+    pages:
+      - size: 1G
+        count: 16
+  nodeSelector:
+    node-role.kubernetes.io/master: ""

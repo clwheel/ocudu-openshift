@@ -1,0 +1,13 @@
+apiVersion: sriovnetwork.openshift.io/v1
+kind: SriovNetwork
+metadata:
+  name: sriov-ocudu
+  namespace: openshift-sriov-network-operator 
+spec:
+  resourceName: pci_sriov_net_ens1f0
+  networkNamespace: ocudu
+  spoofChk: "on"
+  ipam: |-
+    {}
+  linkState: "auto"
+  trust: "off"
