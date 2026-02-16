@@ -1,0 +1,606 @@
+#
+# Copyright 2021-2026 Software Radio Systems Limited
+#
+# By using this file, you agree to the terms and conditions set
+# forth in the LICENSE file which can be found at the top level of
+# the distribution.
+#
+
+# -- Number of pod replicas
+# Note: OCUDU gNB is stateful and requires replicaCount: 1
+# @default -- `1` (do not change for stateful workload)
+replicaCount: 1
+
+# -- Container image configuration
+image:
+  # -- Container image repository
+  # See https://gitlab.com/ocudu/ocudu_elements/ocudu_helm/container_registry for available images
+  repository: registry.gitlab.com/ocudu/ocudu/ocudu_nightly_avx512
+  # -- Image pull policy
+  pullPolicy: IfNotPresent
+  # -- Image tag
+  # Format: release_<arch>-<commit>__<date>
+  # @default -- Chart appVersion
+  tag: 20260210_0944be1e
+
+# -- Image pull secrets for private registries
+# @default -- See values.yaml
+imagePullSecrets:
+  - name: regcred
+
+# -- Override the name of the chart
+# Leaving empty allows Helm to use the chart name for resource naming
+# @default -- Chart name (`ocudu-gnb`)
+nameOverride: ""
+
+# -- Override the full name of resources
+# IMPORTANT: Keep empty to allow multiple instances in the same namespace
+# When empty, Helm generates unique names using: <release-name>-<chart-name>
+# Example: "gnb1-ocudu-gnb", "gnb2-ocudu-gnb"
+# @default -- `<release-name>-<chart-name>`
+fullnameOverride: ""
+
+# -- ConfigMap name overrides for different components
+# Allows customization of ConfigMap names for advanced use cases
+configmap:
+  # -- Main gNB configuration ConfigMap name override
+  main: { nameOverride: "" }
+  # -- O1 adapter configuration ConfigMap name override
+  o1: { nameOverride: "" }
+  # -- Entrypoint script ConfigMap name override
+  entrypoint: { nameOverride: "" }
+
+# -- Service account configuration
+serviceAccount:
+  # -- Create a service account
+  create: true
+  # -- Additional service account annotations
+  # @default -- `{}` (no annotations)
+  annotations: {}
+  # -- Service account name
+  # When empty, uses the release name for uniqueness across multiple instances
+  # @default -- `<release-name>-ocudu-gnb`
+  name: ""
+
+# -- RBAC (Role-Based Access Control) configuration
+rbac:
+  # -- Create Role and RoleBinding resources
+  # Grants least-privilege permissions to the service account
+  create: true
+  # -- Additional custom RBAC rules
+  # @default -- `[]` (no additional rules)
+  extraRules: []
+  # Example: Allow reading secrets
+  # - apiGroups: [""]
+  #   resources: ["secrets"]
+  #   verbs: ["get"]
+
+# -- Pod Disruption Budget configuration
+# Ensures cluster stability during node maintenance and upgrades
+# ref: https://kubernetes.io/docs/tasks/run-application/configure-pdb/
+podDisruptionBudget:
+  # -- Enable PodDisruptionBudget resource
+  enabled: true
+  # -- Minimum number of available pods
+  # Use 0 for single-replica deployments to allow disruption
+  # Use only one: minAvailable OR maxUnavailable (not both)
+  minAvailable: 0
+  # -- Maximum number of unavailable pods
+  # Uncomment to use maxUnavailable instead of minAvailable
+  # maxUnavailable: 1
+  # -- Unhealthy pod eviction policy
+  # AlwaysAllow: Allows eviction of unhealthy pods (recommended for production)
+  # IfHealthyBudget: Protects unhealthy pods (may block node drains)
+  # @default -- `AlwaysAllow`
+  unhealthyPodEvictionPolicy: AlwaysAllow
+
+# -- Additional pod annotations
+# @default -- `{}` (no additional annotations)
+podAnnotations: {"k8s.v1.cni.cncf.io/networks": "sriov-ocudu"}
+
+# -- Pod-level security context
+# @default -- `{}` (no pod security context)
+podSecurityContext: {}
+
+# -- Container-level security context (for non-SR-IOV Device Plugin mode)
+# This configuration requires privileged mode for DPDK with kernel drivers
+# Uncomment this and comment the below when using SR-IOV Device Plugin with SR-IOV
+# Use this when hostNetwork is enabled
+# securityContext:
+#   capabilities:
+#     add: ["SYS_NICE", "NET_ADMIN"]
+#   privileged: true
+
+# -- Alternative security context for SR-IOV Device Plugin enabled (hostNetwork: false)
+# This configuration uses vfio-pci driver which doesn't require privileged mode
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    add:
+      - IPC_LOCK
+      - SYS_ADMIN
+      - SYS_RAWIO
+      - NET_RAW
+      - SYS_NICE
+
+# -- Network configuration
+network:
+  # -- Enable host network mode
+  # false (default): Uses CNI network with SR-IOV for production (NetworkPolicy supported)
+  # true: Uses host network namespace directly (simple setup, NetworkPolicy NOT supported)
+  # @default -- `false`
+  hostNetwork: false
+
+# -- Resource requests and limits
+# Hugepages are automatically configured when defined in limits or requests.
+# The chart detects hugepages-1Gi or hugepages-2Mi and creates volumes accordingly.
+#
+# Example with 1Gi hugepages (recommended for DPDK):
+# ```yaml
+# resources:
+#   limits:
+#     cpu: 12
+#     memory: 16Gi
+#     hugepages-1Gi: 2Gi
+#   requests:
+#     cpu: 12
+#     memory: 16Gi
+#     hugepages-1Gi: 2Gi
+# ```
+#
+# Example with 2Mi hugepages (alternative):
+# ```yaml
+# resources:
+#   limits:
+#     cpu: 12
+#     memory: 16Gi
+#     hugepages-2Mi: 2Gi
+#   requests:
+#     cpu: 12
+#     memory: 16Gi
+#     hugepages-2Mi: 2Gi
+# ```
+
+# @default -- `{}` (no resource constraints)
+resources:
+  # -- Resource limits for the gNB container
+  # Include hugepages-1Gi or hugepages-2Mi to automatically enable hugepage volumes
+  # @default -- `{}` (no limits)
+  limits:
+    cpu: 12
+    memory: 16Gi
+    hugepages-1Gi: 2Gi
+    openshift.io/pci_sriov_net_ens1f0: 1
+
+  # -- Resource requests for the gNB container
+  # Should match limits for guaranteed QoS and CPU pinning
+  # Include hugepages-1Gi or hugepages-2Mi to automatically enable hugepage volumes
+  # @default -- `{}` (no requests)
+  requests:
+    cpu: 12
+    memory: 16Gi
+    hugepages-1Gi: 2Gi
+    openshift.io/pci_sriov_net_ens1f0: 1
+
+# -- Node selector for pod assignment
+# Schedule pods only on nodes with matching labels
+# Example:
+# ```yaml
+# nodeSelector:
+#   node-role.kubernetes.io/worker: ""
+#   feature.node.kubernetes.io/cpu-cpuid.AVX512F: "true"
+# ```
+# @default -- `{}` (no node selector)
+nodeSelector: {}
+
+# -- Tolerations for pod assignment
+# Allows pods to be scheduled on nodes with matching taints
+# @default -- `{}` (no tolerations)
+tolerations: {}
+
+# -- Pod affinity configuration for advanced scheduling
+# @default -- `{}` (no affinity rules)
+affinity: {}
+
+# -- Metrics service configuration
+# Exposes gNB metrics endpoint for Telegraf collection
+metricsService:
+  # -- Enable metrics service
+  enabled: false
+
+  # -- Service type (ClusterIP, NodePort, or LoadBalancer)
+  # @default -- `ClusterIP`
+  type: ClusterIP
+
+  # -- LoadBalancer IP address (optional, when type is LoadBalancer)
+  # Leave empty for automatic assignment
+  # Example: "10.0.0.101"
+  # @default -- `""` (auto-assign)
+  loadBalancerIP: ""
+
+  # -- LoadBalancer class (optional, for clusters with multiple LB implementations)
+  # Example: "metallb" or "cloud-provider-lb"
+  # @default -- `""` (use default)
+  loadBalancerClass: ""
+
+  # -- External traffic policy (Cluster or Local)
+  # Only applies when type is LoadBalancer or NodePort
+  # - Cluster: Load balances across all nodes (default)
+  # - Local: Preserves source IP, only routes to local pods
+  # @default -- `Cluster`
+  externalTrafficPolicy: Cluster
+
+  # -- Session affinity (None or ClientIP)
+  # @default -- `None`
+  sessionAffinity: None
+
+  # -- NodePort (optional, only used when type is NodePort)
+  # If not specified, Kubernetes will auto-assign a port from the NodePort range
+  # Example: 30555
+  # @default -- `""` (auto-assign)
+  nodePort: ""
+
+  # -- Service port (must match the port in gnb-config.yml)
+  port: 8001
+
+  # -- Target port (container port)
+  targetPort: 8001
+
+# -- LoadBalancer service configuration for N2/N3 interfaces
+# Used for exposing gNB to external 5G Core network
+# ref: https://kubernetes.io/docs/concepts/services-networking/service/#loadbalancer
+service:
+  # -- Enable service for N2/N3 interfaces (5G Core connectivity)
+  # When enabled, creates a service for external 5G Core connectivity
+  enabled: false
+
+  # -- Service type (ClusterIP, NodePort, or LoadBalancer)
+  # @default -- `LoadBalancer`
+  type: LoadBalancer
+
+  # -- LoadBalancer IP address (optional, cluster-dependent)
+  # Leave empty for automatic assignment
+  # Example: "10.0.0.100"
+  # @default -- `""` (auto-assign)
+  loadBalancerIP: ""
+
+  # -- LoadBalancer class (optional, for clusters with multiple LB implementations)
+  # Example: "metallb" or "cloud-provider-lb"
+  # @default -- `""` (use default)
+  loadBalancerClass: ""
+
+  # -- External traffic policy (Cluster or Local)
+  # - Cluster: Load balances across all nodes (default)
+  # - Local: Preserves source IP, only routes to local pods
+  # @default -- `Cluster`
+  externalTrafficPolicy: Cluster
+
+  # -- Session affinity (None or ClientIP)
+  # @default -- `None`
+  sessionAffinity: None
+
+  # -- Port configuration for N2 and N3 interfaces
+  ports:
+    # -- N2 interface (NGAP - control plane to AMF)
+    n2:
+      # -- Enable N2 port
+      enabled: true
+      # -- External port
+      port: 38412
+      # -- Container target port (must match gnb-config.yml)
+      # @default -- Same as port
+      targetPort: 38412
+      # -- Protocol (SCTP for NGAP)
+      protocol: SCTP
+      # -- NodePort (optional, only used when type is NodePort)
+      # If not specified, Kubernetes will auto-assign a port from the NodePort range
+      # Example: 30412
+      # @default -- `""` (auto-assign)
+      nodePort: ""
+
+    # -- N3 interface (GTP-U - user plane to UPF)
+    n3:
+      # -- Enable N3 port
+      enabled: true
+      # -- External port
+      port: 2152
+      # -- Container target port (must match gnb-config.yml)
+      # @default -- Same as port
+      targetPort: 2152
+      # -- Protocol (UDP for GTP-U)
+      protocol: UDP
+      # -- NodePort (optional, only used when type is NodePort)
+      # If not specified, Kubernetes will auto-assign a port from the NodePort range
+      # Example: 30152
+      # @default -- `""` (auto-assign)
+      nodePort: ""
+
+# -- Persistent storage configuration
+# The chart supports both PVC (with StorageClass) and hostPath storage for debugging logs
+persistence:
+  # -- Enable persistent storage for debugging logs
+  # When disabled, logs are stored in ephemeral pod storage (lost on pod restart)
+  # @default -- `true`
+  enabled: false
+  
+  # -- Storage type: "pvc" or "hostPath"
+  # - "pvc": Uses PersistentVolumeClaim with dynamic provisioning (recommended for cloud)
+  # - "hostPath": Direct mount from host filesystem (recommended for bare-metal)
+  # @default -- `hostPath`
+  type: hostPath
+  
+  # -- PVC configuration (used when type is "pvc")
+  pvc:
+    # -- Storage class name for dynamic provisioning
+    # Leave empty to use the cluster's default StorageClass
+    # Check available: kubectl get storageclass
+    # @default -- `""` (cluster default)
+    storageClassName: ""
+    
+    # -- Access mode for the persistent volume
+    # ReadWriteOnce: Volume can be mounted read-write by a single node
+    # @default -- `ReadWriteOnce`
+    accessMode: ReadWriteOnce
+    
+    # -- Storage size for the persistent volume
+    # @default -- `10Gi`
+    size: 10Gi
+  
+  # -- hostPath configuration (used when type is "hostPath")
+  hostPath:
+    # -- Path on the host node where logs will be stored
+    # Ensure this path exists or can be created on worker nodes
+    # @default -- `/mnt/debugging-logs`
+    path: "/mnt/debugging-logs"
+    
+    # -- hostPath type (DirectoryOrCreate, Directory, etc.)
+    # DirectoryOrCreate: Creates directory if it doesn't exist
+    # @default -- `DirectoryOrCreate`
+    type: DirectoryOrCreate
+  
+  # -- Mount path inside the container where logs are written
+  # @default -- `/tmp`
+  mountPath: "/tmp"
+  
+  # -- Preserve logs from previous runs (append mode)
+  # When true, logs are appended; when false, logs are overwritten
+  # @default -- `true`
+  preserveOldLogs: true
+
+# -- O1 interface configuration
+# Enables NETCONF-based management interface for the gNB
+o1:
+  # -- Enable O1 interface containers (NETCONF server + O1 adapter)
+  enable_ocudu_o1: false
+
+# -- SR-IOV configuration
+# Required when network.hostNetwork is false (default)
+# Provides high-performance network interfaces via SR-IOV Virtual Functions (VFs)
+# See README.md for SR-IOV setup instructions
+sriovConfig:
+  # -- Enable SR-IOV network device plugin
+  # Must be true when hostNetwork is false
+  # Requires SR-IOV device plugin deployed in cluster
+  # @default -- `true`
+  enabled: true
+
+  # -- Extended resource name from SR-IOV device plugin
+  # This must match the resource name configured in your SR-IOV device plugin
+  # Common values:
+  #   - intel.com/intel_sriov_netdevice (Intel NICs)
+  #   - intel.com/intel_sriov_dpdk (Intel NICs with DPDK)
+  #   - mellanox.com/cx5_sriov_switchdev (Mellanox NICs)
+  # Check available resources: kubectl get node <node-name> -o json | jq '.status.allocatable'
+  # Note: SR-IOV resources must be manually specified in the resources.limits/requests section
+  # @default -- `intel.com/intel_sriov_netdevice`
+  extendedResourceName: "openshift.io/pci_sriov_net_ens1f0"
+
+# -- NetworkPolicy configuration
+# Restricts network traffic to/from the gNB pod for enhanced security
+# IMPORTANT: NetworkPolicy only works when network.hostNetwork is false
+# When hostNetwork is true, the pod uses the host's network namespace and
+# bypasses Kubernetes NetworkPolicy entirely
+networkPolicy:
+  # -- Enable NetworkPolicy
+  # Only effective when network.hostNetwork is false
+  # Check cluster support: kubectl api-versions | grep networking.k8s.io/v1
+  # @default -- `false`
+  enabled: false
+
+  # -- Ingress rules (incoming traffic to gNB)
+  ingress:
+    # -- Allow traffic from 5G Core (N2/N3 interfaces)
+    fiveGCore:
+      # -- Enable 5G Core ingress
+      # @default -- `true`
+      enabled: true
+      # -- Source selectors for 5G Core traffic
+      # @default -- See values.yaml
+      from:
+        - podSelector:
+            matchLabels:
+              app: open5gs
+        - ipBlock:
+            cidr: 10.0.0.0/8  # Adjust for your core network CIDR
+
+    # -- Allow traffic from monitoring systems
+    monitoring:
+      # -- Enable monitoring ingress
+      # @default -- `true`
+      enabled: true
+      # -- Source selectors for monitoring traffic
+      # @default -- See values.yaml
+      from:
+        - namespaceSelector:
+            matchLabels:
+              name: monitoring
+        - podSelector:
+            matchLabels:
+              app: telegraf
+
+    # -- Allow traffic from management systems (O1/NETCONF)
+    management:
+      # -- Enable management ingress
+      # @default -- `false`
+      enabled: false
+      # -- Source selectors for management traffic
+      # @default -- See values.yaml
+      from:
+        - namespaceSelector:
+            matchLabels:
+              name: management
+        - podSelector:
+            matchLabels:
+              app: onap-smo
+
+    # -- Custom ingress rules
+    # Add additional ingress rules as needed
+    # Example:
+    # custom:
+    #   - from:
+    #       - podSelector:
+    #           matchLabels:
+    #             app: custom-app
+    #     ports:
+    #       - protocol: TCP
+    #         port: 9000
+    # @default -- `[]`
+    custom: []
+
+  # -- Egress rules (outgoing traffic from gNB)
+  egress:
+    # -- Allow traffic to 5G Core
+    fiveGCore:
+      # -- Enable 5G Core egress
+      # @default -- `true`
+      enabled: true
+      # -- Destination selectors for 5G Core traffic
+      # @default -- See values.yaml
+      to:
+        - podSelector:
+            matchLabels:
+              app: open5gs
+        - ipBlock:
+            cidr: 10.0.0.0/8  # Adjust for your core network CIDR
+
+    # -- Allow traffic to monitoring systems
+    monitoring:
+      # -- Enable monitoring egress
+      # @default -- `true`
+      enabled: true
+      # -- Destination selectors for monitoring traffic
+      # @default -- See values.yaml
+      to:
+        - namespaceSelector:
+            matchLabels:
+              name: monitoring
+        - podSelector:
+            matchLabels:
+              app: influxdb
+
+    # -- Custom egress rules
+    # Add additional egress rules as needed
+    # Example:
+    # custom:
+    #   - to:
+    #       - podSelector:
+    #           matchLabels:
+    #             app: custom-service
+    #     ports:
+    #       - protocol: TCP
+    #         port: 8080
+    # @default -- `[]`
+    custom: []
+
+# -- gNB configuration file
+# This is the main OCUDU gNB configuration in YAML format
+# For detailed documentation, see: https://gitlab.com/ocudu/ocudu_elements/ocudu_helm
+config:
+  # -- Main gNB configuration file
+  # @default -- See values.yaml for complete example
+  gnb-config.yml: |-
+    cu_cp:
+      amf:
+        addr: open5gs-amf-ngap.open5gs.svc.cluster.local
+        port: 38412
+        bind_addr: 127.0.0.1
+        supported_tracking_areas:
+          - tac: 7
+            plmn_list:
+              - plmn: "00101"
+                # Network slicing configuration
+                tai_slice_support_list:
+                  - sst: 1
+
+    ru_ofh:
+      t1a_max_cp_dl: 535
+      t1a_min_cp_dl: 286
+      t1a_max_cp_ul: 535
+      t1a_min_cp_ul: 286
+      t1a_max_up: 390
+      t1a_min_up: 80
+      ta4_max: 500
+      ta4_min: 25
+      is_prach_cp_enabled: false
+      compr_method_ul: bfp
+      compr_bitwidth_ul: 9
+      compr_method_dl: bfp
+      compr_bitwidth_dl: 9
+      compr_method_prach: bfp
+      compr_bitwidth_prach: 9
+      enable_ul_static_compr_hdr: true
+      enable_dl_static_compr_hdr: true
+      iq_scaling: 5.5
+      cells:
+        - network_interface: ens1f0
+          ru_mac_addr: 70:b3:d5:e1:5b:06
+          du_mac_addr: 80:61:5f:0d:df:aa
+          vlan_tag_cp: 5
+          vlan_tag_up: 5
+          prach_port_id: [4, 5]
+          dl_port_id: [0, 1, 2, 3]
+          ul_port_id: [0, 1]
+
+    cell_cfg:
+      dl_arfcn: 637212
+      band: 78
+      channel_bandwidth_MHz: 100
+      common_scs: 30
+      plmn: "00101"
+      tac: 7
+      pci: 1
+      nof_antennas_dl: 4
+      nof_antennas_ul: 2
+      prach:
+        prach_config_index: 7
+        prach_root_sequence_index: 1
+        zero_correlation_zone: 0
+        prach_frequency_start: 0
+      tdd_ul_dl_cfg:
+        dl_ul_tx_period: 10
+        nof_dl_slots: 7
+        nof_dl_symbols: 6
+        nof_ul_slots: 2
+        nof_ul_symbols: 4
+
+    hal:
+      eal_args: --lcores=(0-1)@(0-1)
+
+    log:
+      filename: /tmp/gnb.log
+      all_level: warning
+
+    pcap:
+      mac_enable: false
+      mac_filename: /tmp/gnb_mac.pcap
+      ngap_enable: false
+      ngap_filename: /tmp/gnb_ngap.pcap
+
+    metrics:
+      autostart_stdout_metrics: true
+      enable_json: false
+
+    remote_control:
+      bind_addr: 0.0.0.0
+      enabled: false
+      port: 8001
