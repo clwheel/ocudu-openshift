@@ -15,13 +15,13 @@ replicaCount: 1
 image:
   # -- Container image repository
   # See https://gitlab.com/ocudu/ocudu_elements/ocudu_helm/container_registry for available images
-  repository: registry.gitlab.com/ocudu/ocudu/ocudu_nightly_avx512
+  repository: quay.io/rh_ee_chwheele/ocudu
   # -- Image pull policy
   pullPolicy: IfNotPresent
   # -- Image tag
   # Format: release_<arch>-<commit>__<date>
   # @default -- Chart appVersion
-  tag: 20260210_0944be1e
+  tag: 2026.02.04
 
 # -- Image pull secrets for private registries
 # @default -- See values.yaml
@@ -96,7 +96,7 @@ podDisruptionBudget:
 
 # -- Additional pod annotations
 # @default -- `{}` (no additional annotations)
-podAnnotations: {"k8s.v1.cni.cncf.io/networks": "sriov-ocudu"}
+podAnnotations: {"k8s.v1.cni.cncf.io/networks": '[{"name": "sriov-ocudu", "mac": "de:ad:be:ef:ca:fe"}]'}
 
 # -- Pod-level security context
 # @default -- `{}` (no pod security context)
@@ -553,11 +553,9 @@ config:
       enable_dl_static_compr_hdr: true
       iq_scaling: 5.5
       cells:
-        - network_interface: ens1f0
-          ru_mac_addr: 70:b3:d5:e1:5b:06
-          du_mac_addr: 80:61:5f:0d:df:aa
-          vlan_tag_cp: 5
-          vlan_tag_up: 5
+        - network_interface: "ens1f0"
+          ru_mac_addr: "fe:ed:be:ef:42:42"
+          du_mac_addr: "de:ad:be:ef:ca:fe"
           prach_port_id: [4, 5]
           dl_port_id: [0, 1, 2, 3]
           ul_port_id: [0, 1]

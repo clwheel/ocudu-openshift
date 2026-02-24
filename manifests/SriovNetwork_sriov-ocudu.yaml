@@ -11,3 +11,4 @@ spec:
     {}
   linkState: "auto"
   trust: "off"
+  capabilities: '{"mac": true}'
