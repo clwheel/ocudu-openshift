@@ -156,6 +156,15 @@ Configuration for OCUDU 5G gNodeB deployment:
    helm install ocudu-gnb oci://registry.gitlab.com/ocudu/ocudu_elements/ocudu_helm/ocudu-gnb --version 3.2.0 -f values/ocudu-gnb/values.yaml -n ocudu
    ```
 
+3. **Deploy OCUDU ru_emulator**
+   ```bash
+   # Grant privileged security context to service account
+   oc adm policy add-scc-to-user privileged -z default -n ocudu
+
+   # Deploy ru_emulator
+   helm install ru-emulator oci://registry.gitlab.com/ocudu/ocudu_elements/ocudu_helm/ru-emulator --version 2.0.0-dev -f values/ru_emulator/values.yaml -n ocudu
+   ```
+
 ## Network Architecture
 
 ```
