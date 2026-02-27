@@ -48,7 +48,8 @@ configmap: {}
 
 # -- Additional pod annotations
 # @default -- `{}` (no additional annotations)
-podAnnotations: {"k8s.v1.cni.cncf.io/networks": '[{"name": "sriov-ocudu", "mac": "fe:ed:be:ef:42:42"}]'}
+#podAnnotations: {"k8s.v1.cni.cncf.io/networks": '[{"name": "sriov-ocudu", "mac": "fe:ed:be:ef:42:42"}]'}
+podAnnotations: {}
 
 # -- Pod-level security context
 # @default -- `{}` (no pod security context)
@@ -56,27 +57,25 @@ podSecurityContext: {}
 
 # -- Container-level security context for hostNetwork mode
 # RU emulator requires privileged access for DPDK and network configuration
-#securityContext:
-#  # -- Additional capabilities for network and system operations
-#  capabilities:
-#    add: ["SYS_NICE", "NET_ADMIN"]
-#  # -- Run container in privileged mode
-#  privileged: true
+securityContext:
+  # -- Additional capabilities for network and system operations
+  capabilities:
+    add: ["SYS_NICE", "NET_ADMIN"]
+  # -- Run container in privileged mode
+  privileged: true
 
 # -- Alternative security context for SR-IOV mode
 # When using SR-IOV, privileged mode is not required
 # Uncomment and use this configuration if SR-IOV is enabled
-securityContext:
-  allowPrivilegeEscalation: false
-  capabilities:
-    add:
-      - IPC_LOCK
-      - SYS_ADMIN
-      - SYS_RAWIO
-      - NET_RAW
-      - SYS_NICE
-      - SYS_RESOURCE
-  privileged: false
+#securityContext:
+#  capabilities:
+#    add:
+#      - IPC_LOCK
+#      - SYS_ADMIN
+#      - SYS_RAWIO
+#      - NET_RAW
+#      - SYS_NICE
+#  privileged: false
 
 # -- Resource requests and limits
 # Example:
@@ -112,7 +111,7 @@ affinity: {}
 network:
   # -- Enable host network mode for direct host network access
   # Disable this when using SR-IOV plugin
-  hostNetwork: false
+  hostNetwork: true
 
 # -- SR-IOV configuration
 # Provides high-performance network interfaces via SR-IOV Virtual Functions (VFs)
@@ -121,7 +120,7 @@ sriovConfig:
   # -- Enable SR-IOV network device plugin
   # Requires SR-IOV device plugin deployed in cluster
   # When enabled, set network.hostNetwork: false
-  enabled: true
+  enabled: false
   
   # -- Extended resource name from SR-IOV device plugin
   # This must match the resource name configured in your SR-IOV device plugin
@@ -162,7 +161,7 @@ config:
       # -- Network interface name for OpenFronthaul traffic
       network_interface: "ens1f0"
       # -- MAC address of the RU (emulated device)
-      ru_mac_addr: "fe:ed:be:ef:42:42"
+      ru_mac_addr: "b4:96:91:d8:8f:22"
       # -- MAC address of the DU (destination)
       du_mac_addr: "de:ad:be:ef:ca:fe"
       # -- VLAN tag for traffic isolation

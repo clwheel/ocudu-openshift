@@ -554,7 +554,7 @@ config:
       iq_scaling: 5.5
       cells:
         - network_interface: "ens1f0"
-          ru_mac_addr: "fe:ed:be:ef:42:42"
+          ru_mac_addr: "b4:96:91:d8:8f:22"
           du_mac_addr: "de:ad:be:ef:ca:fe"
           prach_port_id: [4, 5]
           dl_port_id: [0, 1, 2, 3]
@@ -603,3 +603,12 @@ config:
       bind_addr: 0.0.0.0
       enabled: false
       port: 8001
+
+#    test_mode:
+#      test_ue:
+#        rnti: 0x44
+#        ri: 1 # Set to 2 or 4 for 2 layer or 4 layer MIMO operation
+#        cqi: 15
+#        nof_ues: 1
+#        pusch_active: true
+#        pdsch_active: true
