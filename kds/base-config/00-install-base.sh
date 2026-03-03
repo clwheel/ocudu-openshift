@@ -70,8 +70,11 @@ oc apply -f 30-sriov-subscription.yaml
 wait_for_csv "openshift-sriov-network-operator" "sriov-network-operator"
 
 ##performance tuning
-#echo "Installing Performancing tuning settings"
-#oc apply -f 50-performance.yaml
+echo "Installing Performancing tuning settings"
+oc apply -f 50-performance.yaml
+
+echo "Sleeping for 10 seconds"
+sleep 10
 
 #install the lvm storage operator
 echo "Installing LVM Storage operator"

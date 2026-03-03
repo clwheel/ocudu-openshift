@@ -17,3 +17,6 @@ oc apply -f 37-update-webgui-init.yaml
 
 echo "Expose the webgui route"
 oc apply -f 40-webgui-route.yaml
+
+echo "Wait for deployments to be complete" 
+./50-rollout-wait.sh

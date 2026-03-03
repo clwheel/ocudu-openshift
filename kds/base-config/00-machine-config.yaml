@@ -28,3 +28,21 @@ spec:
             source: data:text/plain;charset=utf-8,sctp
           mode: 420
           path: /etc/modules-load.d/sctp-load.conf
+        - contents:
+            source: data:,net.core.wmem_max%3D16777216%0Anet.core.rmem_max%3D16777216%0Anet.core.netdev_max_backlog%3D100000
+          mode: 420
+          path: /etc/sysctl.d/99-gnb-network.conf
+    systemd:
+      units:
+      - name: set-mtu.service
+        enabled: true
+        contents: |
+          [Unit]
+          Description=Set MTU for 5G Jumbo Frames
+          After=network.target
+          [Service]
+          Type=oneshot
+          ExecStart=/usr/bin/ip link set dev br-ex mtu 9000
+          RemainAfterExit=yes
+          [Install]
+          WantedBy=multi-user.target

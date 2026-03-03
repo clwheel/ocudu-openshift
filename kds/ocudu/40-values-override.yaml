@@ -16,7 +16,9 @@ persistence:
     accessMode: ReadWriteOnce
     size: 5Gi              # Updated to match your earlier 20G requirement
   mountPath: "/tmp"         # Preserved as requested
-  preserveOldLogs: true
+  preserveOldLogs: false
+
+imagePullSecrets: {}
 
 config:
   # -- Main gNB configuration file
