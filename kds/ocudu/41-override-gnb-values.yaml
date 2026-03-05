@@ -1,34 +1,3 @@
 # Performance and Scheduling Overrides
-runtimeClassName: gnb-performance-profile # Must match the metadata.name of your PerformanceProfile
+runtimeClassName: performance-gnb-performance-profile # Must match the metadata.name of your PerformanceProfile
 
-# CPU and Memory Pinning (Guaranteed QoS)
-resources:
-  limits:
-    cpu: "4"             # Requesting 4 cores from the isolated pool (4-15)
-    memory: "8Gi"
-    hugepages-1Gi: "4Gi" # Utilizing the Hugepages we enabled in the PerformanceProfile
-  requests:
-    cpu: "4"             # MUST be identical to limits for CPU pinning to trigger
-    memory: "8Gi"
-    hugepages-1Gi: "4Gi"
-
-# Networking and System Tuning
-podSecurityContext:
-  sysctls:
-    - name: net.core.wmem_max
-      value: "16777216" # Expands the 'transmitter' buffer for Jumbo Frames
-    - name: net.core.rmem_max
-      value: "16777216"
-
-# Ensure the container has the necessary hardware permissions
-containerSecurityContext:
-  privileged: true      # Required for GNB to access specific NIC hardware/DPDK
-  capabilities:
-    add:
-      - NET_ADMIN
-      - SYS_NICE        # Helps the RT Kernel prioritize GNB threads
-      - IPC_LOCK        # Prevents memory from being swapped out
-
-# If your chart supports affinity, ensure it targets your SNO node
-nodeSelector:
-  node-role.kubernetes.io/master: ""

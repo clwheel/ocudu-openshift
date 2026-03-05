@@ -18,7 +18,11 @@ persistence:
   mountPath: "/tmp"         # Preserved as requested
   preserveOldLogs: false
 
-imagePullSecrets: {}
+imagePullSecrets: []
+
+
+# Performance and Scheduling Overrides
+runtimeClassName: performance-gnb-performance-profile # Must match the metadata.name of your PerformanceProfile
 
 config:
   # -- Main gNB configuration file
