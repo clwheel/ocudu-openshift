@@ -1,0 +1,3 @@
+# Performance and Scheduling Overrides
+runtimeClassName: performance-gnb-performance-profile # Must match the metadata.name of your PerformanceProfile
+
