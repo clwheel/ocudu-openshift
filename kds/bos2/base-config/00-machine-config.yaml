@@ -10,11 +10,6 @@ spec:
   config:
     ignition:
       version: 3.2.0
-    passwd:
-      users:
-        - name: root
-          # Password: redhat11
-          passwordHash: "$6$vS7u9M1m$E6mXjB6N4tYpX8M0fL4k8S3f9G2H1R6V5u4E3w2Q1Z0P9O8N7M6L5K4J3I2H1G0F.D1"
     storage:
       files:
         # 1. Un-blacklist SCTP module
