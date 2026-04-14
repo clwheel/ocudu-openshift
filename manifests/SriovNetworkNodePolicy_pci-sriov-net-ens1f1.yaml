@@ -1,0 +1,19 @@
+apiVersion: sriovnetwork.openshift.io/v1
+kind: SriovNetworkNodePolicy
+metadata:
+  name: pci-sriov-net-ens1f1
+  namespace: openshift-sriov-network-operator 
+spec:
+  resourceName: pci_sriov_net_ens1f1
+  nodeSelector:
+    feature.node.kubernetes.io/network-sriov.capable: "true" 
+  priority: 10
+  mtu: 9000
+  needVhostNet: false 
+  numVfs: 16
+  externallyManaged: false 
+  nicSelector: 
+    pfNames: ["ens1f1#0-15"]
+  deviceType: netdevice
+  isRdma: false 
+  excludeTopology: false 

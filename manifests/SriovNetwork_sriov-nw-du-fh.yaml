@@ -1,0 +1,19 @@
+apiVersion: sriovnetwork.openshift.io/v1
+kind: SriovNetwork
+metadata:
+  name: sriov-nw-du-fh
+  namespace: openshift-sriov-network-operator 
+spec:
+  resourceName: pci_sriov_net_ens1f1
+  networkNamespace: ocudu
+  spoofChk: "on"
+  ipam: |-
+    {
+      "type": "whereabouts",
+      "range": "192.168.20.0/24",
+      "exclude": ["192.168.20.1", "192.168.20.2"]
+    }
+  linkState: "auto"
+  trust: "off"
+  capabilities: '{"mac": true}'
+  vlan: 4093

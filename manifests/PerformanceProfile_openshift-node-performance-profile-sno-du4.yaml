@@ -1,7 +1,7 @@
 apiVersion: performance.openshift.io/v2
 kind: PerformanceProfile
 metadata:
-  name: openshift-node-performance-profile
+  name: openshift-node-performance-profile-sno-du4
 spec:
   cpu:
     isolated: 2-31,34-63
