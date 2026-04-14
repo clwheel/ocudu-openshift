@@ -535,10 +535,10 @@ config:
 
     ru_sdr:
       device_driver: uhd
-      device_args: type=n3xx
+      device_args: type=n3xx,master_clock_rate=245.76e6
       clock: gpsdo
       sync: gpsdo
-      srate: 30.72
+      srate: 61.44
       tx_gain: 35
       rx_gain: 60
 
