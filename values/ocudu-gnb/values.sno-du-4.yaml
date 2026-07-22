@@ -538,13 +538,13 @@ config:
       device_args: type=n3xx,master_clock_rate=245.76e6
       clock: internal
       sync: internal
-      srate: 61.44
-      tx_gain: 35
-      rx_gain: 60
+      srate: 30.72
+      tx_gain: 10
+      rx_gain: 20
 
     cell_cfg:
-      dl_arfcn: 368640
-      band: 3
+      dl_arfcn: 633334
+      band: 78
       channel_bandwidth_MHz: 20
       common_scs: 15
       plmn: "00101"
