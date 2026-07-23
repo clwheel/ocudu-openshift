@@ -539,14 +539,14 @@ config:
       clock: internal
       sync: internal
       srate: 30.72
-      tx_gain: 10
+      tx_gain: 40
       rx_gain: 20
 
     cell_cfg:
       dl_arfcn: 633334
       band: 78
       channel_bandwidth_MHz: 20
-      common_scs: 15
+      common_scs: 30
       plmn: "00101"
       tac: 7
       pci: 1
